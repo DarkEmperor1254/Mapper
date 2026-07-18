@@ -22,8 +22,8 @@ public static class MapperFixSettings
     public static int DummyCountX = 4;
     public static int DummyCountY = 4;
     public static float DummyParticleLifeTime = 0.5f;
-    public static string BundleNameFilter = "mapper";
-    public static string XraysPrefabPath = "Assets/Mapper/XRays.prefab";
+    public static string BundleNameFilter = "xrays";
+    public static string XraysPrefabPath = "Assets/XRays/XRays.prefab";
     public static bool VerboseLogging = false;
     public static uint TargetGearPersistentID = 10;
     public static float SequenceCooldown = 1.5f;
@@ -81,13 +81,13 @@ public static class MapperFixSettings
 
         if (MTFOPathAPI.HasCustomPath)
         {
-            dir = Path.Combine(MTFOPathAPI.CustomPath, "mapperfix");
+            dir = Path.Combine(MTFOPathAPI.CustomPath, "mapper");
             MapperFixPlugin.Log.LogInfo("Using MTFO custom path: " + MTFOPathAPI.CustomPath);
         }
         else
         {
             // MTFO가 아직 커스텀 경로를 안 잡아준 경우(런다운 미로드 등) 안전하게 대체
-            dir = Path.Combine(Paths.ConfigPath, "custom", "mapperfix");
+            dir = Path.Combine(Paths.ConfigPath, "custom", "mapper");
             MapperFixPlugin.Log.LogWarning("MTFOPathAPI.HasCustomPath is false. Falling back to: " + dir);
         }
 
