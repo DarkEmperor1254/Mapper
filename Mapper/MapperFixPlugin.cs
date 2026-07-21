@@ -9,13 +9,18 @@ using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using FloLib.Networks;
+using FloLib.Networks.Replications;
 
 [BepInPlugin("DarkEmperor.mapperfix", "Mapper Cloud Fix", "1.0.0")]
+[BepInDependency("GTFO.FloLib", BepInDependency.DependencyFlags.HardDependency)]
 public class MapperFixPlugin : BasePlugin
 {
     // ===== 크래시 방지용 더미 캐시 (MapperDataCloudManagerPatch에서 사용) =====
     public static GameObject CachedCloudTemplate;
     public static GameObject CachedScanPointTemplate;
+
+    public static readonly Dictionary<int, float> ChargeRatioByPlayerID = new Dictionary<int, float>();
 
     // ===== xrays.prefab 캐시 =====
     private static AssetBundle s_cachedBundle;
@@ -33,6 +38,9 @@ public class MapperFixPlugin : BasePlugin
 
         var harmony = new Harmony("DarkEmperor.mapperfix");
 
+        GlobalNetAction<StatePayload4Byte>.Setup();
+        GlobalNetAction<StatePayload4Byte>.OnReceive += OnChargeRatioReceived;
+
         try
         {
             harmony.PatchAll(Assembly.GetExecutingAssembly());
@@ -48,6 +56,23 @@ public class MapperFixPlugin : BasePlugin
         }
 
         Log.LogInfo($"Mapper cloud fix loaded. Settings: {MapperFixSettings.FilePath}");
+    }
+
+    private static void OnChargeRatioReceived(ulong senderID, StatePayload4Byte payload)
+    {
+        float ratio = payload.Get<float>();
+
+        foreach (var player in SNet.LobbyPlayers)
+        {
+            if (player.Lookup == senderID)
+            {
+                ChargeRatioByPlayerID[player.PlayerSlotIndex()] = ratio;
+
+                if (MapperFixSettings.VerboseLogging)
+                    Log.LogInfo($"[ChargeNetAction] received from slot={player.PlayerSlotIndex()} ratio={ratio:F2}");
+                break;
+            }
+        }
     }
 
     // settings.jsonc 파일을 저장하면 게임 재시작 없이 즉시 반영되도록 파일 변경을 감시함.

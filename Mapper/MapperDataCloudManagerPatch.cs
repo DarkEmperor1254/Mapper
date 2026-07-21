@@ -65,7 +65,7 @@ public class MapperDataCloudManagerPatch
         if (s_lastSpawnTime.TryGetValue(playerID, out float last) &&
             now - last < MapperFixSettings.SequenceCooldown)
         {
-            s_lastSpawnTime[playerID] = now; // 시퀀스가 계속되는 중 — 타임스탬프만 갱신, 스폰은 스킵
+            s_lastSpawnTime[playerID] = now;
             return;
         }
 
@@ -75,11 +75,13 @@ public class MapperDataCloudManagerPatch
             ? Quaternion.LookRotation(data.dirFwd)
             : Quaternion.identity;
 
-        // EnableChargeBasedScaling이 켜져있을 때만 cloudDepth를 충전 비율로 해석함
-        // (그 외의 경우 cloudDepth는 원래 게임 값 그대로이므로 건드리지 않음)
-        float? chargeRatio = MapperFixSettings.EnableChargeBasedScaling
-            ? (float?)Mathf.Clamp01(data.cloudDepth)
-            : null;
+        // cloudDepth 대신 GlobalNetAction으로 받아둔 값을 playerID로 조회
+        float? chargeRatio = null;
+        if (MapperFixSettings.EnableChargeBasedScaling &&
+            MapperFixPlugin.ChargeRatioByPlayerID.TryGetValue(playerID, out float storedRatio))
+        {
+            chargeRatio = storedRatio;
+        }
 
         MapperFixPlugin.SpawnXRayEffectAt(data.scanPos, rot, chargeRatio);
     }
