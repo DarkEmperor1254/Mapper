@@ -15,6 +15,21 @@ public class MapperDataCloudManagerPatch
     [HarmonyPrefix]
     static void Prefix(MapperDataCloudManager __instance, ref pSpawnMapperDataCloud data)
     {
+        // 혼자 플레이 등, WantSpawnMapperDataCloud를 안 거치고 DoSpawnMapperDataCloud가
+        // 곧바로 호출되는 경우를 위한 backup 소비 지점.
+        // playerID로 매칭하기 때문에, 실제 멀티플레이에서 남이 보낸 패킷을 받을 때는
+        // 이 조건이 거의 항상 실패해서 안전하게 무시됨.
+        if (MapperFixSettings.EnableChargeBasedScaling &&
+            ChargeRatioRelay.TryConsume(data.playerID, out float backupRatio))
+        {
+            data.cloudDepth = backupRatio;
+
+            if (MapperFixSettings.VerboseLogging)
+            {
+                MapperFixPlugin.Log.LogInfo($"[ChargeRelay] (backup @ DoSpawnMapperDataCloud) Overwrote cloudDepth with ratio={backupRatio:F2}");
+            }
+        }
+
         if (__instance.m_mapperCloudPrefab != null && __instance.m_mapperDataScanPointPrefab != null)
             return;
 

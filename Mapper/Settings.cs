@@ -171,7 +171,7 @@ public static class MapperFixSettings
         sb.AppendLine("{");
 
         AppendSectionHeader(sb, "Identity");
-        AppendField(sb, "TargetGearPersistentID", (int)TargetGearPersistentID, "Works only when fired from the Gear with this persistentID (default 10 = Mapper)");
+        AppendField(sb, "TargetGearPersistentID", (int)TargetGearPersistentID, "Works only when fired from the Gear with this GearCategoryDataBlock persistentID (default 10 = Mapper)");
 
         AppendSectionHeader(sb, "Advanced");
         AppendField(sb, "BundleNameFilter", BundleNameFilter, "Search keyword for the name of the AssetBundle containing xrays.prefab");
