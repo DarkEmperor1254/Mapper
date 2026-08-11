@@ -77,10 +77,17 @@ public class MapperDataCloudManagerPatch
 
         // cloudDepth 대신 GlobalNetAction으로 받아둔 값을 playerID로 조회
         float? chargeRatio = null;
-        if (MapperFixSettings.EnableChargeBasedScaling &&
-            MapperFixPlugin.ChargeRatioByPlayerID.TryGetValue(playerID, out float storedRatio))
+        if (MapperFixSettings.EnableChargeBasedScaling)
         {
-            chargeRatio = storedRatio;
+            foreach (var player in SNet.LobbyPlayers)
+            {
+                if (player.PlayerSlotIndex() == data.playerID)
+                {
+                    if (MapperFixPlugin.ChargeRatioManager.TryGetData(player, out float ratio))
+                        chargeRatio = ratio;
+                    break;
+                }
+            }
         }
 
         MapperFixPlugin.SpawnXRayEffectAt(data.scanPos, rot, chargeRatio);

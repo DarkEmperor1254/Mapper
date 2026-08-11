@@ -9,11 +9,10 @@ using System;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
-using FloLib.Networks;
-using FloLib.Networks.Replications;
+using OptionalNetworking;
 
 [BepInPlugin("DarkEmperor.mapperfix", "Mapper Cloud Fix", "1.0.0")]
-[BepInDependency("GTFO.FloLib", BepInDependency.DependencyFlags.HardDependency)]
+[BepInDependency("Dinorush.OptionalNetworkAPI", BepInDependency.DependencyFlags.HardDependency)]
 public class MapperFixPlugin : BasePlugin
 {
     // ===== 크래시 방지용 더미 캐시 (MapperDataCloudManagerPatch에서 사용) =====
@@ -31,15 +30,24 @@ public class MapperFixPlugin : BasePlugin
     private FileSystemWatcher _configWatcher;
     private static DateTime s_lastReloadUtc = DateTime.MinValue;
 
+    public static ModInfo ModInfo;
+    public static CustomDataManager<float> ChargeRatioManager;
+    public static CustomDataSender<float> ChargeRatioSender;
+
     public override void Load()
     {
         MapperFixSettings.LoadOrCreate();
         SetupConfigHotReload();
 
-        var harmony = new Harmony("DarkEmperor.mapperfix");
+        ModInfo = OptionalNetworkAPI.RegisterMod("MapperFix");
 
-        GlobalNetAction<StatePayload4Byte>.Setup();
-        GlobalNetAction<StatePayload4Byte>.OnReceive += OnChargeRatioReceived;
+        ChargeRatioManager = ModInfo.AddCustomDataManager<float>(player => 1f);
+        ChargeRatioSender = ModInfo.AddCustomDataSender<float>(
+            OnChargeRatioReceived,
+            player => 1f,
+            SenderMode.OtherPlayers);
+
+        var harmony = new Harmony("DarkEmperor.mapperfix");
 
         try
         {
@@ -58,21 +66,12 @@ public class MapperFixPlugin : BasePlugin
         Log.LogInfo($"Mapper cloud fix loaded. Settings: {MapperFixSettings.FilePath}");
     }
 
-    private static void OnChargeRatioReceived(ulong senderID, StatePayload4Byte payload)
+    private static void OnChargeRatioReceived(SNet_Player fromPlayer, float ratio)
     {
-        float ratio = payload.Get<float>();
+        ChargeRatioManager.SendData(fromPlayer, ratio);
 
-        foreach (var player in SNet.LobbyPlayers)
-        {
-            if (player.Lookup == senderID)
-            {
-                ChargeRatioByPlayerID[player.PlayerSlotIndex()] = ratio;
-
-                if (MapperFixSettings.VerboseLogging)
-                    Log.LogInfo($"[ChargeNetAction] received from slot={player.PlayerSlotIndex()} ratio={ratio:F2}");
-                break;
-            }
-        }
+        if (MapperFixSettings.VerboseLogging)
+            Log.LogInfo($"[OptionalNet] received from slot={fromPlayer.PlayerSlotIndex()} ratio={ratio:F2}");
     }
 
     // settings.jsonc 파일을 저장하면 게임 재시작 없이 즉시 반영되도록 파일 변경을 감시함.

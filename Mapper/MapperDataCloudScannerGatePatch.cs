@@ -1,5 +1,3 @@
-using FloLib.Networks;
-using FloLib.Networks.Replications;
 using Gear;
 using HarmonyLib;
 using SNetwork;
@@ -38,16 +36,11 @@ public class MapperDataCloudScannerGatePatch
             {
                 float ratio = Mathf.Clamp01(tool.m_lastFireChargeUp);
 
-                var payload = new StatePayload4Byte();
-                payload.Set<float>(ratio);
-                GlobalNetAction<StatePayload4Byte>.Send(payload);
-
-                // 내 화면 로컬 즉시 반영용으로 나 자신도 딕셔너리에 바로 채워둠
-                int localPlayerID = tool.Owner.PlayerSlotIndex;
-                MapperFixPlugin.ChargeRatioByPlayerID[localPlayerID] = ratio;
+                MapperFixPlugin.ChargeRatioSender.SendData(ratio, default(SNet_Player), SNet_ChannelType.GameOrderCritical);
+                MapperFixPlugin.ChargeRatioManager[SNet.LocalPlayer] = ratio;
 
                 if (MapperFixSettings.VerboseLogging)
-                    MapperFixPlugin.Log.LogInfo($"[ChargeNetAction] sent ratio={ratio:F2}");
+                    MapperFixPlugin.Log.LogInfo($"[OptionalNet] sent ratio={ratio:F2}");
             }
         }
 

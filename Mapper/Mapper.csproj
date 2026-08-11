@@ -29,7 +29,7 @@
     <Reference Include="$(BepInEx)\core\Il2CppInterop.Common.dll" Private="false" />
     <Reference Include="$(BepInEx)\core\Il2CppInterop.Runtime.dll" Private="false" />
     <Reference Include="$(BepInEx)\interop\*.dll" Private="false" />
-    <Reference Include="$(BepInEx)\plugins\Flowaria-FloLib\FloLib.dll" Private="false" />
+    <Reference Include="$(BepInEx)\plugins\Dinorush-OptionalNetworkAPI\OptionalNetworkAPI.dll" Private="false" />
     <Compile Remove="MapperTracker\**" />
     <EmbeddedResource Remove="MapperTracker\**" />
     <None Remove="MapperTracker\**" />
