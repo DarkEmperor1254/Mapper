@@ -3,13 +3,18 @@ using HarmonyLib;
 using SNetwork;
 using UnityEngine;
 
-// 지정된 persistentID(Gear)에서 발사된 게 아니면 Scan() 자체를 건너뛰어
-// 브로드캐스트(따라서 다른 사람에게 보이는 것 포함)가 아예 발생하지 않게 함.
-// 이 검사는 실제 발사자의 클라이언트에서만 의미가 있음 — 원격 클라이언트는
-// Scan()을 직접 실행하지 않고 브로드캐스트만 받기 때문.
+// ===== 발사 직후 무기를 바꿨다가 Mapper를 다시 들면 먹통이 되는 문제 대응 =====
 //
-// 동시에, 충전량은 이 시점에 MapperTool 자신의 필드에서만 정확히 읽을 수 있으므로,
-// 발사 시퀀스의 첫 스텝에서 미리 계산해 짧게 "스탬프"해둠 (MapperFixPlugin에서 소모).
+// 가설: 발사 시퀀스(SteppedMapping 코루틴)가 도는 도중에 무기를 바꾸면 Mapper 오브젝트가
+//       비활성화되면서 코루틴이 중간에 죽고, 시퀀스 끝에서 원래 되돌려야 하던 상태값
+//       (m_inFiringSequence / m_isMapping / m_isAiming / m_lockedState)이 켜진 채로 남음.
+//       다시 들었을 때 Update가 그 남은 상태를 보고 아무 동작도 안 할 수 있음.
+//
+// 이 가설은 interop DLL(메서드 본문 없음)만으로는 확정할 수 없으므로,
+//  1) VerboseLogging이 켜져 있으면 OnWield/OnUnWield/StartMapper/StopMapper 시점의
+//     상태값을 전부 로그로 남기고 (먹통 재현 시 어떤 값이 남아있는지 바로 확인 가능)
+//  2) FixStuckAfterWeaponSwap이 켜져 있으면, 무기를 집어넣은 직후에도 "발사 중" 상태가
+//     남아있을 때에 한해서만 그 상태를 정리함. 정상 상태에서는 아무것도 건드리지 않음.
 [HarmonyPatch(typeof(MapperDataCloudScanner), nameof(MapperDataCloudScanner.Scan))]
 public class MapperDataCloudScannerGatePatch
 {
@@ -41,6 +46,24 @@ public class MapperDataCloudScannerGatePatch
 
                 if (MapperFixSettings.VerboseLogging)
                     MapperFixPlugin.Log.LogInfo($"[OptionalNet] sent ratio={ratio:F2}");
+            }
+
+            if (tool != null && MapperFixSettings.EnableChargeBasedScaling)
+            {
+                try
+                {
+                    float ratio = Mathf.Clamp01(tool.m_lastFireChargeUp);
+
+                    MapperFixPlugin.ChargeRatioSender.SendData(ratio, default(SNet_Player), SNet_ChannelType.GameOrderCritical);
+                    MapperFixPlugin.ChargeRatioManager[SNet.LocalPlayer] = ratio;
+
+                    if (MapperFixSettings.VerboseLogging)
+                        MapperFixPlugin.Log.LogInfo($"[OptionalNet] sent ratio={ratio:F2}");
+                }
+                catch (System.Exception ex)
+                {
+                    MapperFixPlugin.Log.LogWarning("[OptionalNet] send failed, continuing scan: " + ex.Message);
+                }
             }
         }
 

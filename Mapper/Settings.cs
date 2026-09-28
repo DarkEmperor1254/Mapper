@@ -27,6 +27,7 @@ public static class MapperFixSettings
     public static bool VerboseLogging = false;
     public static uint TargetGearPersistentID = 10;
     public static float SequenceCooldown = 1.5f;
+    public static bool FixStuckAfterWeaponSwap = true;
 
     public static bool EnableXRaysCustomization = false;
 
@@ -122,6 +123,7 @@ public static class MapperFixSettings
         VerboseLogging = GetBool(values, nameof(VerboseLogging), VerboseLogging);
         TargetGearPersistentID = (uint)GetInt(values, nameof(TargetGearPersistentID), (int)TargetGearPersistentID);
         SequenceCooldown = GetFloat(values, nameof(SequenceCooldown), SequenceCooldown);
+        FixStuckAfterWeaponSwap = GetBool(values, nameof(FixStuckAfterWeaponSwap), FixStuckAfterWeaponSwap);
 
         EnableXRaysCustomization = GetBool(values, nameof(EnableXRaysCustomization), EnableXRaysCustomization);
 
@@ -230,6 +232,9 @@ public static class MapperFixSettings
         AppendField(sb, "DummyCountX", DummyCountX, "Horizontal grid density of crash prevention dummies (lower values ​​reduce lag)");
         AppendField(sb, "DummyCountY", DummyCountY, "Vertical grid density of crash prevention dummies (lower values ​​reduce lag)");
         AppendField(sb, "DummyParticleLifeTime", DummyParticleLifeTime, "Lifespan (seconds) of crash prevention dummy particles");
+
+        AppendSectionHeader(sb, "Stability");
+        AppendField(sb, "FixStuckAfterWeaponSwap", FixStuckAfterWeaponSwap, "If true, when the weapon is swapped away mid-firing-sequence, stale Mapper state flags are reset so it works again when re-equipped");
 
         AppendSectionHeader(sb, "Debug");
         AppendField(sb, "VerboseLogging", VerboseLogging, "If true, output detailed logs related to spawn/cleanup", isLast: true);
