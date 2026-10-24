@@ -27,6 +27,9 @@ public static class MapperFixSettings
     public static bool VerboseLogging = false;
     public static uint TargetGearPersistentID = 10;
     public static float SequenceCooldown = 1.5f;
+    public static bool EnableFadeOut = true;
+    public static float FadeOutDuration = 1.5f;
+    public static string FadeMaterialProperty = "";
     public static bool FixStuckAfterWeaponSwap = true;
 
     public static bool EnableXRaysCustomization = false;
@@ -123,6 +126,9 @@ public static class MapperFixSettings
         VerboseLogging = GetBool(values, nameof(VerboseLogging), VerboseLogging);
         TargetGearPersistentID = (uint)GetInt(values, nameof(TargetGearPersistentID), (int)TargetGearPersistentID);
         SequenceCooldown = GetFloat(values, nameof(SequenceCooldown), SequenceCooldown);
+        EnableFadeOut = GetBool(values, nameof(EnableFadeOut), EnableFadeOut);
+        FadeOutDuration = GetFloat(values, nameof(FadeOutDuration), FadeOutDuration);
+        FadeMaterialProperty = GetString(values, nameof(FadeMaterialProperty), FadeMaterialProperty);
         FixStuckAfterWeaponSwap = GetBool(values, nameof(FixStuckAfterWeaponSwap), FixStuckAfterWeaponSwap);
 
         EnableXRaysCustomization = GetBool(values, nameof(EnableXRaysCustomization), EnableXRaysCustomization);
@@ -183,6 +189,9 @@ public static class MapperFixSettings
         AppendField(sb, "EmitDuration", EmitDuration, "Time (seconds) during which the xrays effect continues to shoot new particles when the mapper is fired");
         AppendField(sb, "CleanupSafetyBuffer", CleanupSafetyBuffer, "Additional waiting time (in seconds) after EmitDuration until the object is completely destroyed");
         AppendField(sb, "SequenceCooldown", SequenceCooldown, "If the same player signal arrives again within this time (seconds), it is considered the same firing sequence and does not respawn.");
+        AppendField(sb, "EnableFadeOut", EnableFadeOut, "If true, the XRay effect fades out gradually before it is destroyed instead of disappearing abruptly");
+        AppendField(sb, "FadeOutDuration", FadeOutDuration, "Time (seconds) the fade-out takes. The fade ends exactly when the effect is destroyed (EmitDuration + CleanupSafetyBuffer)");
+        AppendField(sb, "FadeMaterialProperty", FadeMaterialProperty, "Material property name(s) to fade, comma separated (e.g. \"_Color\"). Empty = auto-detect. Check the log with VerboseLogging if the fade has no effect");
 
         AppendSectionHeader(sb, "ChargeBasedScaling");
         AppendField(sb, "EnableChargeBasedScaling", EnableChargeBasedScaling, "Whether to adjust range/area proportional to charge amount (number of scan steps). Accurately reflected only on the shooter's own screen (remote players may see the default value).");

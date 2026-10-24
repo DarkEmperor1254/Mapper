@@ -262,6 +262,8 @@ public class MapperFixPlugin : BasePlugin
 
         float emitDuration = MapperFixSettings.EmitDuration;
 
+        XRayFade.Register(instance, emitDuration + MapperFixSettings.CleanupSafetyBuffer);
+
         if (xraysComp != null)
         {
             UnityEngine.Object.Destroy(xraysComp, emitDuration);
